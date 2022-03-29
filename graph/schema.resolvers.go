@@ -15,14 +15,7 @@ func (r *mutationResolver) CreateCandidate(ctx context.Context, input model.NewC
 }
 
 func (r *queryResolver) Candidates(ctx context.Context) ([]*model.Candidate, error) {
-	var candidates []*model.Candidate
-	dummyCandidate := model.Candidate{
-		ID:   "1",
-		Name: "Dummy Candidate",
-	}
-
-	candidates = append(candidates, &dummyCandidate)
-	return candidates, nil
+	return candidates.GetCandidates()
 }
 
 // Mutation returns generated.MutationResolver implementation.
