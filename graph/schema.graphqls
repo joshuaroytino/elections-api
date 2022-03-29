@@ -1,0 +1,28 @@
+# GraphQL schema example
+#
+# https://gqlgen.com/getting-started/
+
+type Candidate {
+  _id: String!
+  name: String!
+  createdAt: Time!
+}
+
+type Query {
+  candidates: [Candidate!]!
+}
+
+input NewCandidate {
+  name: String!
+}
+
+input NewCandidateDatabase {
+  name: String!
+  createdAt: Time!
+}
+
+type Mutation {
+  createCandidate(input: NewCandidate!): Candidate!
+}
+
+scalar Time
