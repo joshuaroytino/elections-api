@@ -1,7 +1,8 @@
-package candidates
+package repository
 
 import (
 	"context"
+	"elections-api/custom_model"
 	"elections-api/database"
 	"elections-api/graph/model"
 	"log"
@@ -12,30 +13,36 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CreateCandidate(candidate model.NewCandidate) (*model.Candidate, error) {
+func CreateCandidate(candidate model.NewCandidate) (*custom_model.Candidate, error) {
+	var createdCandidate *custom_model.Candidate
+
 	candidateCollection := database.MI.DB.Collection(os.Getenv("MONGO_CANDIDATES_COLLECTION"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
 	defer cancel()
 
-	result, err := candidateCollection.InsertOne(ctx, &model.NewCandidateDatabase{
+	cursor, err := candidateCollection.InsertOne(ctx, &model.NewCandidateDatabase{
 		Name: candidate.Name,
 		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
 	})
 
 	if err != nil {
-		return nil, err
+		return createdCandidate, err
 	}
 
-	return &model.Candidate{ 
-		ID: result.InsertedID.(primitive.ObjectID).Hex(),
-		Name: candidate.Name,
-		CreatedAt: time.Now(),
-	 }, nil
+	candidateID := cursor.InsertedID.(primitive.ObjectID)
+
+	candidateCollection.FindOne(ctx, bson.D{{"_id", candidateID}}).Decode(&createdCandidate)
+
+	return createdCandidate, nil
+
 }
 
-func GetCandidates() ([]*model.Candidate, error) {
+func GetCandidates() ([]*custom_model.Candidate, error) {
+	var candidates []*custom_model.Candidate
+
 	candidateCollection := database.MI.DB.Collection(os.Getenv("MONGO_CANDIDATES_COLLECTION"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -45,17 +52,16 @@ func GetCandidates() ([]*model.Candidate, error) {
 	result, err := candidateCollection.Find(ctx, bson.D{})
 
 	if err != nil {
-		return nil, err
+		return candidates, err
 	}
 
-	var candidates []*model.Candidate
-
 	for result.Next(ctx) {
-		var candidate *model.Candidate
+		var candidate *custom_model.Candidate
 		err := result.Decode(&candidate)
 		
 		if err != nil {
 			log.Fatal(err)
+			return candidates, err
 		}
 
 		candidates = append(candidates, candidate)

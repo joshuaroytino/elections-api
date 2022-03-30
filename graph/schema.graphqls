@@ -2,10 +2,11 @@
 #
 # https://gqlgen.com/getting-started/
 
-type Candidate {
-  _id: String!
+type Candidate @goModel(model: "elections-api/custom_model.Candidate") {
+  _id: ObjectID!
   name: String!
-  createdAt: Time!
+  created_at: Time!
+  updated_at: Time!
 }
 
 type Query {
@@ -18,7 +19,8 @@ input NewCandidate {
 
 input NewCandidateDatabase {
   name: String!
-  createdAt: Time!
+  created_at: Time!
+  updated_at: Time!
 }
 
 type Mutation {
@@ -26,3 +28,9 @@ type Mutation {
 }
 
 scalar Time
+scalar ObjectID @goModel(model: "elections-api/scalar.ObjectIDScalar")
+
+directive @goModel(
+  model: String
+  models: [String!]
+) on OBJECT | INPUT_OBJECT | SCALAR | ENUM | INTERFACE | UNION

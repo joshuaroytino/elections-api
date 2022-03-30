@@ -6,17 +6,12 @@ import (
 	"time"
 )
 
-type Candidate struct {
-	ID        string    `json:"_id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
-}
-
 type NewCandidate struct {
 	Name string `json:"name"`
 }
 
 type NewCandidateDatabase struct {
 	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"createdAt"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
