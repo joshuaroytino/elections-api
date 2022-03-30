@@ -13,18 +13,19 @@ type Query {
   candidates: [Candidate!]!
 }
 
-input NewCandidate {
+input NewCandidateRequest {
   name: String!
 }
 
-input NewCandidateDatabase {
+input NewCandidateDTO
+  @goModel(model: "elections-api/custom_model.NewCandidateDTO") {
   name: String!
   created_at: Time!
   updated_at: Time!
 }
 
 type Mutation {
-  createCandidate(input: NewCandidate!): Candidate!
+  createCandidate(input: NewCandidateRequest!): Candidate!
 }
 
 scalar Time

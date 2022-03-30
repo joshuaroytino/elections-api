@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func CreateCandidate(candidate model.NewCandidate) (*custom_model.Candidate, error) {
+func CreateCandidate(candidate model.NewCandidateRequest) (*custom_model.Candidate, error) {
 	var createdCandidate *custom_model.Candidate
 
 	candidateCollection := database.MI.DB.Collection(os.Getenv("MONGO_CANDIDATES_COLLECTION"))
@@ -22,7 +22,7 @@ func CreateCandidate(candidate model.NewCandidate) (*custom_model.Candidate, err
 
 	defer cancel()
 
-	cursor, err := candidateCollection.InsertOne(ctx, &model.NewCandidateDatabase{
+	cursor, err := candidateCollection.InsertOne(ctx, &custom_model.NewCandidateDTO{
 		Name: candidate.Name,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),

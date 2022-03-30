@@ -2,16 +2,6 @@
 
 package model
 
-import (
-	"time"
-)
-
-type NewCandidate struct {
+type NewCandidateRequest struct {
 	Name string `json:"name"`
-}
-
-type NewCandidateDatabase struct {
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
 }

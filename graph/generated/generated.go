@@ -39,7 +39,6 @@ type Config struct {
 }
 
 type ResolverRoot interface {
-	Candidate() CandidateResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 }
@@ -56,7 +55,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateCandidate func(childComplexity int, input model.NewCandidate) int
+		CreateCandidate func(childComplexity int, input model.NewCandidateRequest) int
 	}
 
 	Query struct {
@@ -64,11 +63,8 @@ type ComplexityRoot struct {
 	}
 }
 
-type CandidateResolver interface {
-	UpdatedAt(ctx context.Context, obj *custom_model.Candidate) (*time.Time, error)
-}
 type MutationResolver interface {
-	CreateCandidate(ctx context.Context, input model.NewCandidate) (*custom_model.Candidate, error)
+	CreateCandidate(ctx context.Context, input model.NewCandidateRequest) (*custom_model.Candidate, error)
 }
 type QueryResolver interface {
 	Candidates(ctx context.Context) ([]*custom_model.Candidate, error)
@@ -127,7 +123,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateCandidate(childComplexity, args["input"].(model.NewCandidate)), true
+		return e.complexity.Mutation.CreateCandidate(childComplexity, args["input"].(model.NewCandidateRequest)), true
 
 	case "Query.candidates":
 		if e.complexity.Query.Candidates == nil {
@@ -215,18 +211,19 @@ type Query {
   candidates: [Candidate!]!
 }
 
-input NewCandidate {
+input NewCandidateRequest {
   name: String!
 }
 
-input NewCandidateDatabase {
+input NewCandidateDTO
+  @goModel(model: "elections-api/custom_model.NewCandidateDTO") {
   name: String!
   created_at: Time!
   updated_at: Time!
 }
 
 type Mutation {
-  createCandidate(input: NewCandidate!): Candidate!
+  createCandidate(input: NewCandidateRequest!): Candidate!
 }
 
 scalar Time
@@ -247,10 +244,10 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createCandidate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewCandidate
+	var arg0 model.NewCandidateRequest
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewCandidate2electionsᚑapiᚋgraphᚋmodelᚐNewCandidate(ctx, tmp)
+		arg0, err = ec.unmarshalNNewCandidateRequest2electionsᚑapiᚋgraphᚋmodelᚐNewCandidateRequest(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -428,14 +425,14 @@ func (ec *executionContext) _Candidate_updated_at(ctx context.Context, field gra
 		Object:     "Candidate",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
+		IsMethod:   false,
+		IsResolver: false,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Candidate().UpdatedAt(rctx, obj)
+		return obj.UpdatedAt, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -447,9 +444,9 @@ func (ec *executionContext) _Candidate_updated_at(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*time.Time)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createCandidate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -477,7 +474,7 @@ func (ec *executionContext) _Mutation_createCandidate(ctx context.Context, field
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateCandidate(rctx, args["input"].(model.NewCandidate))
+		return ec.resolvers.Mutation().CreateCandidate(rctx, args["input"].(model.NewCandidateRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1786,31 +1783,8 @@ func (ec *executionContext) ___Type_specifiedByURL(ctx context.Context, field gr
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputNewCandidate(ctx context.Context, obj interface{}) (model.NewCandidate, error) {
-	var it model.NewCandidate
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	for k, v := range asMap {
-		switch k {
-		case "name":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			it.Name, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputNewCandidateDatabase(ctx context.Context, obj interface{}) (model.NewCandidateDatabase, error) {
-	var it model.NewCandidateDatabase
+func (ec *executionContext) unmarshalInputNewCandidateDTO(ctx context.Context, obj interface{}) (custom_model.NewCandidateDTO, error) {
+	var it custom_model.NewCandidateDTO
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -1848,6 +1822,29 @@ func (ec *executionContext) unmarshalInputNewCandidateDatabase(ctx context.Conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputNewCandidateRequest(ctx context.Context, obj interface{}) (model.NewCandidateRequest, error) {
+	var it model.NewCandidateRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -1874,7 +1871,7 @@ func (ec *executionContext) _Candidate(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "name":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -1884,7 +1881,7 @@ func (ec *executionContext) _Candidate(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "created_at":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
@@ -1894,28 +1891,18 @@ func (ec *executionContext) _Candidate(ctx context.Context, sel ast.SelectionSet
 			out.Values[i] = innerFunc(ctx)
 
 			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
+				invalids++
 			}
 		case "updated_at":
-			field := field
-
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Candidate_updated_at(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
-				return res
+				return ec._Candidate_updated_at(ctx, field, obj)
 			}
 
-			out.Concurrently(i, func() graphql.Marshaler {
-				return innerFunc(ctx)
+			out.Values[i] = innerFunc(ctx)
 
-			})
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2530,8 +2517,8 @@ func (ec *executionContext) marshalNCandidate2ᚖelectionsᚑapiᚋcustom_model�
 	return ec._Candidate(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNNewCandidate2electionsᚑapiᚋgraphᚋmodelᚐNewCandidate(ctx context.Context, v interface{}) (model.NewCandidate, error) {
-	res, err := ec.unmarshalInputNewCandidate(ctx, v)
+func (ec *executionContext) unmarshalNNewCandidateRequest2electionsᚑapiᚋgraphᚋmodelᚐNewCandidateRequest(ctx context.Context, v interface{}) (model.NewCandidateRequest, error) {
+	res, err := ec.unmarshalInputNewCandidateRequest(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -2572,27 +2559,6 @@ func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v in
 
 func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
 	res := graphql.MarshalTime(v)
-	if res == graphql.Null {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-	}
-	return res
-}
-
-func (ec *executionContext) unmarshalNTime2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
-	res, err := graphql.UnmarshalTime(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNTime2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := graphql.MarshalTime(*v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
