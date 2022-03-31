@@ -9,10 +9,16 @@ import (
 	"elections-api/graph/generated"
 	"elections-api/graph/model"
 	"elections-api/repository"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (r *mutationResolver) CreateCandidate(ctx context.Context, input model.NewCandidateRequest) (*custom_model.Candidate, error) {
 	return repository.CreateCandidate(input)
+}
+
+func (r *queryResolver) Candidate(ctx context.Context, id primitive.ObjectID) (*custom_model.Candidate, error) {
+	return repository.GetCandidate(id)
 }
 
 func (r *queryResolver) Candidates(ctx context.Context) ([]*custom_model.Candidate, error) {

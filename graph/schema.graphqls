@@ -10,6 +10,7 @@ type Candidate @goModel(model: "elections-api/custom_model.Candidate") {
 }
 
 type Query {
+  candidate(_id: ObjectID!): Candidate!
   candidates: [Candidate!]!
 }
 

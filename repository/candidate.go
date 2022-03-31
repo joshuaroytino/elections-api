@@ -29,6 +29,7 @@ func CreateCandidate(candidate model.NewCandidateRequest) (*custom_model.Candida
 	})
 
 	if err != nil {
+		log.Fatal(err)
 		return createdCandidate, err
 	}
 
@@ -52,6 +53,7 @@ func GetCandidates() ([]*custom_model.Candidate, error) {
 	result, err := candidateCollection.Find(ctx, bson.D{})
 
 	if err != nil {
+		log.Fatal(err)
 		return candidates, err
 	}
 
@@ -68,4 +70,25 @@ func GetCandidates() ([]*custom_model.Candidate, error) {
 	}
 
 	return candidates, nil
+}
+
+func GetCandidate(id primitive.ObjectID) (*custom_model.Candidate, error) {
+	var candidate *custom_model.Candidate
+
+	candidateCollection := database.MI.DB.Collection(os.Getenv("MONGO_CANDIDATES_COLLECTION"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	defer cancel()
+
+	result := candidateCollection.FindOne(ctx, bson.M{"_id": id})
+
+	err := result.Decode(&candidate)
+
+	if err != nil {
+		log.Fatal(err)
+		return candidate, err
+	}
+
+	return candidate, nil
 }

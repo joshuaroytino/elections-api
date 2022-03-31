@@ -59,6 +59,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Candidate  func(childComplexity int, id primitive.ObjectID) int
 		Candidates func(childComplexity int) int
 	}
 }
@@ -67,6 +68,7 @@ type MutationResolver interface {
 	CreateCandidate(ctx context.Context, input model.NewCandidateRequest) (*custom_model.Candidate, error)
 }
 type QueryResolver interface {
+	Candidate(ctx context.Context, id primitive.ObjectID) (*custom_model.Candidate, error)
 	Candidates(ctx context.Context) ([]*custom_model.Candidate, error)
 }
 
@@ -124,6 +126,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateCandidate(childComplexity, args["input"].(model.NewCandidateRequest)), true
+
+	case "Query.candidate":
+		if e.complexity.Query.Candidate == nil {
+			break
+		}
+
+		args, err := ec.field_Query_candidate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Candidate(childComplexity, args["_id"].(primitive.ObjectID)), true
 
 	case "Query.candidates":
 		if e.complexity.Query.Candidates == nil {
@@ -208,6 +222,7 @@ type Candidate @goModel(model: "elections-api/custom_model.Candidate") {
 }
 
 type Query {
+  candidate(_id: ObjectID!): Candidate!
   candidates: [Candidate!]!
 }
 
@@ -268,6 +283,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_candidate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 primitive.ObjectID
+	if tmp, ok := rawArgs["_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("_id"))
+		arg0, err = ec.unmarshalNObjectID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["_id"] = arg0
 	return args, nil
 }
 
@@ -475,6 +505,48 @@ func (ec *executionContext) _Mutation_createCandidate(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().CreateCandidate(rctx, args["input"].(model.NewCandidateRequest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*custom_model.Candidate)
+	fc.Result = res
+	return ec.marshalNCandidate2ᚖelectionsᚑapiᚋcustom_modelᚐCandidate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Query_candidate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_candidate_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().Candidate(rctx, args["_id"].(primitive.ObjectID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1973,6 +2045,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
+		case "candidate":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_candidate(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
 		case "candidates":
 			field := field
 
