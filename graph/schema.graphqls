@@ -18,6 +18,10 @@ input NewCandidateRequest {
   name: String!
 }
 
+input UpdateCandidateRequest {
+  name: String
+}
+
 input NewCandidateDTO
   @goModel(model: "elections-api/custom_model.NewCandidateDTO") {
   name: String!
@@ -25,8 +29,15 @@ input NewCandidateDTO
   updated_at: Time!
 }
 
+input UpdateCandidateDTO
+  @goModel(model: "elections-api/custom_model.UpdateCandidateDTO") {
+  name: String
+  updated_at: Time!
+}
+
 type Mutation {
   createCandidate(input: NewCandidateRequest!): Candidate!
+  updateCandidate(_id: ObjectID!, input: UpdateCandidateRequest!): Candidate!
 }
 
 scalar Time

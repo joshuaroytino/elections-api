@@ -17,3 +17,8 @@ type NewCandidateDTO struct {
 	CreatedAt time.Time `json:"created_at" bson:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
 }
+
+type UpdateCandidateDTO struct {
+	Name      string    `json:"name,omitempty" bson:"name:omitempty"`
+	UpdatedAt time.Time `json:"updated_at" bson:"updated_at"`
+}

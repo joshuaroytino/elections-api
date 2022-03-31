@@ -56,6 +56,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateCandidate func(childComplexity int, input model.NewCandidateRequest) int
+		UpdateCandidate func(childComplexity int, id primitive.ObjectID, input model.UpdateCandidateRequest) int
 	}
 
 	Query struct {
@@ -66,6 +67,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateCandidate(ctx context.Context, input model.NewCandidateRequest) (*custom_model.Candidate, error)
+	UpdateCandidate(ctx context.Context, id primitive.ObjectID, input model.UpdateCandidateRequest) (*custom_model.Candidate, error)
 }
 type QueryResolver interface {
 	Candidate(ctx context.Context, id primitive.ObjectID) (*custom_model.Candidate, error)
@@ -126,6 +128,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateCandidate(childComplexity, args["input"].(model.NewCandidateRequest)), true
+
+	case "Mutation.updateCandidate":
+		if e.complexity.Mutation.UpdateCandidate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateCandidate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UpdateCandidate(childComplexity, args["_id"].(primitive.ObjectID), args["input"].(model.UpdateCandidateRequest)), true
 
 	case "Query.candidate":
 		if e.complexity.Query.Candidate == nil {
@@ -230,6 +244,10 @@ input NewCandidateRequest {
   name: String!
 }
 
+input UpdateCandidateRequest {
+  name: String
+}
+
 input NewCandidateDTO
   @goModel(model: "elections-api/custom_model.NewCandidateDTO") {
   name: String!
@@ -237,8 +255,15 @@ input NewCandidateDTO
   updated_at: Time!
 }
 
+input UpdateCandidateDTO
+  @goModel(model: "elections-api/custom_model.UpdateCandidateDTO") {
+  name: String
+  updated_at: Time!
+}
+
 type Mutation {
   createCandidate(input: NewCandidateRequest!): Candidate!
+  updateCandidate(_id: ObjectID!, input: UpdateCandidateRequest!): Candidate!
 }
 
 scalar Time
@@ -268,6 +293,30 @@ func (ec *executionContext) field_Mutation_createCandidate_args(ctx context.Cont
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateCandidate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 primitive.ObjectID
+	if tmp, ok := rawArgs["_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("_id"))
+		arg0, err = ec.unmarshalNObjectID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["_id"] = arg0
+	var arg1 model.UpdateCandidateRequest
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg1, err = ec.unmarshalNUpdateCandidateRequest2electionsᚑapiᚋgraphᚋmodelᚐUpdateCandidateRequest(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg1
 	return args, nil
 }
 
@@ -505,6 +554,48 @@ func (ec *executionContext) _Mutation_createCandidate(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().CreateCandidate(rctx, args["input"].(model.NewCandidateRequest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*custom_model.Candidate)
+	fc.Result = res
+	return ec.marshalNCandidate2ᚖelectionsᚑapiᚋcustom_modelᚐCandidate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_updateCandidate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_updateCandidate_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UpdateCandidate(rctx, args["_id"].(primitive.ObjectID), args["input"].(model.UpdateCandidateRequest))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1917,6 +2008,60 @@ func (ec *executionContext) unmarshalInputNewCandidateRequest(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateCandidateDTO(ctx context.Context, obj interface{}) (custom_model.UpdateCandidateDTO, error) {
+	var it custom_model.UpdateCandidateDTO
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "updated_at":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("updated_at"))
+			it.UpdatedAt, err = ec.unmarshalNTime2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateCandidateRequest(ctx context.Context, obj interface{}) (model.UpdateCandidateRequest, error) {
+	var it model.UpdateCandidateRequest
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -2008,6 +2153,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "createCandidate":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_createCandidate(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "updateCandidate":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateCandidate(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
@@ -2662,6 +2817,11 @@ func (ec *executionContext) marshalNTime2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
+func (ec *executionContext) unmarshalNUpdateCandidateRequest2electionsᚑapiᚋgraphᚋmodelᚐUpdateCandidateRequest(ctx context.Context, v interface{}) (model.UpdateCandidateRequest, error) {
+	res, err := ec.unmarshalInputUpdateCandidateRequest(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
 	return ec.___Directive(ctx, sel, &v)
 }
@@ -2938,6 +3098,16 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	res := graphql.MarshalBoolean(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
 	return res
 }
 

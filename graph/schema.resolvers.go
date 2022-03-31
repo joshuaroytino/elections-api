@@ -17,6 +17,10 @@ func (r *mutationResolver) CreateCandidate(ctx context.Context, input model.NewC
 	return repository.CreateCandidate(input)
 }
 
+func (r *mutationResolver) UpdateCandidate(ctx context.Context, id primitive.ObjectID, input model.UpdateCandidateRequest) (*custom_model.Candidate, error) {
+	return repository.UpdateCandidate(id, input)
+}
+
 func (r *queryResolver) Candidate(ctx context.Context, id primitive.ObjectID) (*custom_model.Candidate, error) {
 	return repository.GetCandidate(id)
 }

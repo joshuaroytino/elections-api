@@ -5,3 +5,7 @@ package model
 type NewCandidateRequest struct {
 	Name string `json:"name"`
 }
+
+type UpdateCandidateRequest struct {
+	Name *string `json:"name"`
+}
