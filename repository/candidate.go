@@ -5,6 +5,7 @@ import (
 	"elections-api/custom_model"
 	"elections-api/database"
 	"elections-api/graph/model"
+	"elections-api/utils"
 	"log"
 	"os"
 	"time"
@@ -96,6 +97,10 @@ func GetCandidate(id primitive.ObjectID) (*custom_model.Candidate, error) {
 
 func UpdateCandidate(id primitive.ObjectID, input model.UpdateCandidateRequest) (*custom_model.Candidate, error) {
 	var candidate *custom_model.Candidate
+	var updateDto custom_model.UpdateCandidateDTO
+	updateDto.UpdatedAt = time.Now()
+
+	utils.MergeStruct(&updateDto, &input)
 
 	candidateCollection := database.MI.DB.Collection(os.Getenv("MONGO_CANDIDATES_COLLECTION"))
 
@@ -103,7 +108,7 @@ func UpdateCandidate(id primitive.ObjectID, input model.UpdateCandidateRequest) 
 
 	defer cancel()
 
-	result := candidateCollection.FindOneAndUpdate(ctx, bson.M{"_id": id}, bson.M{"$set": input}, options.FindOneAndUpdate().SetReturnDocument(1))
+	result := candidateCollection.FindOneAndUpdate(ctx, bson.M{"_id": id}, bson.M{"$set": updateDto}, options.FindOneAndUpdate().SetReturnDocument(1))
 
 	err := result.Decode(&candidate)
 
