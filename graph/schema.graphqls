@@ -38,6 +38,7 @@ input UpdateCandidateDTO
 type Mutation {
   createCandidate(input: NewCandidateRequest!): Candidate!
   updateCandidate(_id: ObjectID!, input: UpdateCandidateRequest!): Candidate!
+  deleteCandidate(_id: ObjectID!): Candidate!
 }
 
 scalar Time

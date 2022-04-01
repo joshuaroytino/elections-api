@@ -31,8 +31,8 @@ func CreateCandidate(candidate model.NewCandidateRequest) (*custom_model.Candida
 	})
 
 	if err != nil {
-		log.Fatal(err)
-		return createdCandidate, err
+		log.Panic(err)
+		return nil, err
 	}
 
 	candidateID := cursor.InsertedID.(primitive.ObjectID)
@@ -55,8 +55,8 @@ func GetCandidates() ([]*custom_model.Candidate, error) {
 	result, err := candidateCollection.Find(ctx, bson.D{})
 
 	if err != nil {
-		log.Fatal(err)
-		return candidates, err
+		log.Panic(err)
+		return nil, err
 	}
 
 	for result.Next(ctx) {
@@ -64,8 +64,8 @@ func GetCandidates() ([]*custom_model.Candidate, error) {
 		err := result.Decode(&candidate)
 		
 		if err != nil {
-			log.Fatal(err)
-			return candidates, err
+			log.Panic(err)
+			return nil, err
 		}
 
 		candidates = append(candidates, candidate)
@@ -88,8 +88,8 @@ func GetCandidate(id primitive.ObjectID) (*custom_model.Candidate, error) {
 	err := result.Decode(&candidate)
 
 	if err != nil {
-		log.Fatal(err)
-		return candidate, err
+		log.Panic(err)
+		return nil, err
 	}
 
 	return candidate, nil
@@ -113,9 +113,26 @@ func UpdateCandidate(id primitive.ObjectID, input model.UpdateCandidateRequest) 
 	err := result.Decode(&candidate)
 
 	if err != nil {
-		log.Fatal(err)
-		return candidate, err
+		log.Panic(err)
+		return nil, err
 	}
 
 	return candidate, nil
+}
+
+func DeleteCandidate(id primitive.ObjectID) error {
+	candidateCollection := database.MI.DB.Collection(os.Getenv("MONGO_CANDIDATES_COLLECTION"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	defer cancel()
+
+	_, err := candidateCollection.DeleteOne(ctx, bson.M{"_id": id})
+
+	if err != nil {
+		log.Panic(err)
+		return err
+	}
+
+	return nil
 }

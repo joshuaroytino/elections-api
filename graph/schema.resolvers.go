@@ -21,6 +21,20 @@ func (r *mutationResolver) UpdateCandidate(ctx context.Context, id primitive.Obj
 	return repository.UpdateCandidate(id, input)
 }
 
+func (r *mutationResolver) DeleteCandidate(ctx context.Context, id primitive.ObjectID) (*custom_model.Candidate, error) {
+	candidate, err := repository.GetCandidate(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if err := repository.DeleteCandidate(id); err != nil {
+		return nil, err
+	}
+
+	return candidate, nil
+}
+
 func (r *queryResolver) Candidate(ctx context.Context, id primitive.ObjectID) (*custom_model.Candidate, error) {
 	return repository.GetCandidate(id)
 }

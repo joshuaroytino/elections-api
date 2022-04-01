@@ -56,6 +56,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		CreateCandidate func(childComplexity int, input model.NewCandidateRequest) int
+		DeleteCandidate func(childComplexity int, id primitive.ObjectID) int
 		UpdateCandidate func(childComplexity int, id primitive.ObjectID, input model.UpdateCandidateRequest) int
 	}
 
@@ -68,6 +69,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateCandidate(ctx context.Context, input model.NewCandidateRequest) (*custom_model.Candidate, error)
 	UpdateCandidate(ctx context.Context, id primitive.ObjectID, input model.UpdateCandidateRequest) (*custom_model.Candidate, error)
+	DeleteCandidate(ctx context.Context, id primitive.ObjectID) (*custom_model.Candidate, error)
 }
 type QueryResolver interface {
 	Candidate(ctx context.Context, id primitive.ObjectID) (*custom_model.Candidate, error)
@@ -128,6 +130,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CreateCandidate(childComplexity, args["input"].(model.NewCandidateRequest)), true
+
+	case "Mutation.deleteCandidate":
+		if e.complexity.Mutation.DeleteCandidate == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteCandidate_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteCandidate(childComplexity, args["_id"].(primitive.ObjectID)), true
 
 	case "Mutation.updateCandidate":
 		if e.complexity.Mutation.UpdateCandidate == nil {
@@ -264,6 +278,7 @@ input UpdateCandidateDTO
 type Mutation {
   createCandidate(input: NewCandidateRequest!): Candidate!
   updateCandidate(_id: ObjectID!, input: UpdateCandidateRequest!): Candidate!
+  deleteCandidate(_id: ObjectID!): Candidate!
 }
 
 scalar Time
@@ -293,6 +308,21 @@ func (ec *executionContext) field_Mutation_createCandidate_args(ctx context.Cont
 		}
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteCandidate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 primitive.ObjectID
+	if tmp, ok := rawArgs["_id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("_id"))
+		arg0, err = ec.unmarshalNObjectID2goᚗmongodbᚗorgᚋmongoᚑdriverᚋbsonᚋprimitiveᚐObjectID(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["_id"] = arg0
 	return args, nil
 }
 
@@ -596,6 +626,48 @@ func (ec *executionContext) _Mutation_updateCandidate(ctx context.Context, field
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
 		return ec.resolvers.Mutation().UpdateCandidate(rctx, args["_id"].(primitive.ObjectID), args["input"].(model.UpdateCandidateRequest))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*custom_model.Candidate)
+	fc.Result = res
+	return ec.marshalNCandidate2ᚖelectionsᚑapiᚋcustom_modelᚐCandidate(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_deleteCandidate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_deleteCandidate_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteCandidate(rctx, args["_id"].(primitive.ObjectID))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2163,6 +2235,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateCandidate":
 			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateCandidate(ctx, field)
+			}
+
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
+
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "deleteCandidate":
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteCandidate(ctx, field)
 			}
 
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, innerFunc)
